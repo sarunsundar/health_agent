@@ -33,7 +33,7 @@ jobs:
         with:
           python-version: "3.11"
 
-      # Step 3: Install dependencies
+      # Step 3: Install dependenciess
       - name: Install dependencies
         run: |
           pip install --upgrade pip
