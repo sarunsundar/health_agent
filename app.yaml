@@ -1,0 +1,37 @@
+# Databricks App configuration
+# Deploy with: databricks apps deploy --app-name health-sql-agent
+
+command:
+  - "uvicorn"
+  - "app:app"
+  - "--host"
+  - "0.0.0.0"
+  - "--port"
+  - "8000"
+
+# Service Principal OAuth2 (auto-refreshes every 1 hour)
+# No PATs needed — the Databricks SDK handles token lifecycle automatically
+env:
+  - name: DATABRICKS_HOST
+    value: "https://dbc-62ddb402-91eb.cloud.databricks.com"
+  - name: DATABRICKS_CLIENT_ID
+    value: "a2c9245b-2bcb-4355-91d4-cb8ce55f7549"
+  - name: DATABRICKS_CLIENT_SECRET
+    value: "dose6a986572541f970bd58a626702cc4902"
+  - name: SQL_WAREHOUSE_ID
+    value: "a60db24c17d6587f"
+  - name: SQL_WAREHOUSE_HTTP_PATH
+    value: "/sql/1.0/warehouses/a60db24c17d6587f"
+  - name: LLM_ENDPOINT
+    value: "databricks-meta-llama-3-3-70b-instruct"
+  - name: UNITY_CATALOG
+    value: "health"
+  - name: SKIP_AUTH
+    value: "false"
+
+# User Authorization (for interactive Databricks UI users)
+# For Telegram/OpenClaw flow, this is NOT used — SP handles auth
+user_authorization:
+  enabled: true
+  scopes:
+    - "sql"

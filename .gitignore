@@ -1,0 +1,32 @@
+# ─── Secrets (NEVER commit) ───
+.env
+*.pem
+*.key
+
+# ─── Python ───
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+.eggs/
+*.egg
+.venv/
+venv/
+
+# ─── IDE ───
+.vscode/settings.json
+.idea/
+
+# ─── OS ───
+.DS_Store
+Thumbs.db
+
+# ─── OpenClaw (separate system, excluded from SQL Agent CI/CD) ───
+openclaw/
+
+# ─── Artifacts (local dev) ───
+artifacts/
+
+#LangGraph API
+.langgraph_api

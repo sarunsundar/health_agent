@@ -1,0 +1,18 @@
+# Core
+fastapi>=0.115.0
+uvicorn[standard]>=0.32.0
+pydantic>=2.0
+
+# LangGraph & LangChain
+langgraph>=0.4.0
+langchain-core>=0.3.0
+langchain-community>=0.3.0
+langchain-openai>=0.3.0
+
+# Databricks
+databricks-sdk>=0.40.0
+databricks-sql-connector>=3.0.0    # Required for SQLDatabase.from_uri() with databricks:// protocol
+databricks-sqlalchemy>=1.0.0       # SQLAlchemy dialect plugin for databricks:// URIs
+
+# SQL Parsing (for validation node)
+sqlparse>=0.5.0

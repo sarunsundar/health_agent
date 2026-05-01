@@ -1,0 +1,68 @@
+# ═══════════════════════════════════════════════════════════════════════════════
+# CI Pipeline — Runs on every Pull Request
+#
+# Triggers: When a PR is opened/updated targeting the 'main' branch
+# Runs on: GitHub-hosted Ubuntu VM (free, temporary)
+# Purpose: Lint code, run unit tests, validate DABs bundle
+# ═══════════════════════════════════════════════════════════════════════════════
+
+name: CI — Lint, Test & Validate
+
+on:
+  pull_request:
+    branches: [main]
+    paths-ignore:
+      - "openclaw/**"     # Don't trigger CI for OpenClaw changes
+      - "sql/**"          # Don't trigger CI for SQL script changes
+      - "*.md"            # Don't trigger CI for docs
+      - ".gitignore"
+
+jobs:
+  lint-and-test:
+    name: Lint & Unit Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Download your repo code onto the GitHub VM
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Step 2: Install Python
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      # Step 3: Install dependencies
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest ruff
+
+      # Step 4: Lint — catches bugs without running code
+      - name: Lint with ruff
+        run: ruff check . --exclude openclaw/
+
+      # Step 5: Unit tests — tests YOUR logic, no Databricks needed
+      - name: Run unit tests
+        run: pytest tests/unit/ -v --tb=short
+
+  validate-bundle:
+    name: Validate DABs Bundle
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Databricks CLI
+        uses: databricks/setup-cli@main
+
+      # Validate the bundle config is correct (no deployment)
+      - name: Validate bundle
+        run: databricks bundle validate --target dev
+        env:
+          DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
+          DATABRICKS_CLIENT_ID: ${{ secrets.DATABRICKS_CLIENT_ID }}
+          DATABRICKS_CLIENT_SECRET: ${{ secrets.DATABRICKS_CLIENT_SECRET }}
