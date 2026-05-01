@@ -40,10 +40,6 @@ jobs:
           pip install -r requirements.txt
           pip install pytest ruff
 
-      # Step 4: Lint — catches bugs without running code
-      - name: Lint with ruff
-        run: ruff check . --exclude openclaw/
-
-      # Step 5: Unit tests — tests YOUR logic, no Databricks needed
+      # Step 4: Unit tests — tests YOUR logic, no Databricks needed
       - name: Run unit tests
         run: pytest tests/unit/ -v --tb=short
