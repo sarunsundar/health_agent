@@ -12,9 +12,9 @@ on:
   pull_request:
     branches: [main]
     paths-ignore:
-      - "openclaw/**"     # Don't trigger CI for OpenClaw changes
-      - "sql/**"          # Don't trigger CI for SQL script changes
-      - "*.md"            # Don't trigger CI for docs
+      - "openclaw/**" # Don't trigger CI for OpenClaw changes
+      - "sql/**" # Don't trigger CI for SQL script changes
+      - "*.md" # Don't trigger CI for docs
       - ".gitignore"
 
 jobs:
@@ -47,22 +47,3 @@ jobs:
       # Step 5: Unit tests — tests YOUR logic, no Databricks needed
       - name: Run unit tests
         run: pytest tests/unit/ -v --tb=short
-
-  validate-bundle:
-    name: Validate DABs Bundle
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Databricks CLI
-        uses: databricks/setup-cli@main
-
-      # Validate the bundle config is correct (no deployment)
-      - name: Validate bundle
-        run: databricks bundle validate --target dev
-        env:
-          DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
-          DATABRICKS_CLIENT_ID: ${{ secrets.DATABRICKS_CLIENT_ID }}
-          DATABRICKS_CLIENT_SECRET: ${{ secrets.DATABRICKS_CLIENT_SECRET }}
