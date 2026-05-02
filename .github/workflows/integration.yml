@@ -66,7 +66,7 @@ jobs:
           SQL_WAREHOUSE_HTTP_PATH: ${{ secrets.SQL_WAREHOUSE_HTTP_PATH }}
           UNITY_CATALOG: ${{ vars.UNITY_CATALOG }}
           UNITY_SCHEMA: core
-          LLM_ENDPOINT: databricks-meta-llama-3-3-70b-instruct
+          LLM_ENDPOINT: ${{ vars.LLM_ENDPOINT }}
           TEST_CITIZEN_TELEGRAM_ID: ${{ secrets.TEST_CITIZEN_TELEGRAM_ID }}
           TEST_CLINICIAN_TELEGRAM_ID: ${{ secrets.TEST_CLINICIAN_TELEGRAM_ID }}
           TEST_UNREGISTERED_TELEGRAM_ID: "000000000"
@@ -86,7 +86,7 @@ jobs:
           SQL_WAREHOUSE_HTTP_PATH: ${{ secrets.SQL_WAREHOUSE_HTTP_PATH }}
           UNITY_CATALOG: ${{ vars.UNITY_CATALOG }}
           UNITY_SCHEMA: core
-          LLM_ENDPOINT: databricks-meta-llama-3-3-70b-instruct
+          LLM_ENDPOINT: ${{ vars.LLM_ENDPOINT }}
           TEST_CITIZEN_TELEGRAM_ID: ${{ secrets.TEST_CITIZEN_TELEGRAM_ID }}
           TEST_CLINICIAN_TELEGRAM_ID: ${{ secrets.TEST_CLINICIAN_TELEGRAM_ID }}
           TEST_UNREGISTERED_TELEGRAM_ID: "000000000"
