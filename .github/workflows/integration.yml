@@ -1,0 +1,93 @@
+# ═══════════════════════════════════════════════════════════════════════════════
+# Integration Test Pipeline — Runs after merge to main
+#
+# Triggers: When a PR is successfully merged into 'main'
+# Runs on: GitHub-hosted Ubuntu VM
+# Purpose: Verify the agent works against real Databricks services
+#          (SQL Warehouse, Unity Catalog tables, LLM endpoint)
+#
+# Why separate from ci.yml?
+#   - Integration tests are slow (warehouse cold-start, LLM calls)
+#   - They cost Databricks credits on every run
+#   - They are flaky due to network/warehouse sleep — not suitable for PR gates
+#   - They require full Databricks credentials (only safe after merge review)
+#
+# Required GitHub Secrets (Settings > Secrets and variables > Actions):
+#   DATABRICKS_HOST, DATABRICKS_CLIENT_ID, DATABRICKS_CLIENT_SECRET
+#   SQL_WAREHOUSE_ID, SQL_WAREHOUSE_HTTP_PATH
+#   TEST_CITIZEN_TELEGRAM_ID, TEST_CLINICIAN_TELEGRAM_ID
+# ═══════════════════════════════════════════════════════════════════════════════
+
+name: Integration Tests
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - "openclaw/**"
+      - "sql/**"
+      - "*.md"
+      - ".gitignore"
+
+jobs:
+  integration-tests:
+    name: Integration Tests (Real Databricks)
+    runs-on: ubuntu-latest
+
+    # Prevent parallel integration runs if two PRs merge in quick succession
+    concurrency:
+      group: integration-tests
+      cancel-in-progress: false
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest python-dotenv
+
+      # Run only non-LLM integration tests (warehouse + identity + schema)
+      # These are faster and more reliable — no LLM token costs
+      - name: Run integration tests (non-LLM)
+        run: pytest tests/integration/ -v --tb=short -m "not llm"
+        env:
+          DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
+          DATABRICKS_CLIENT_ID: ${{ secrets.DATABRICKS_CLIENT_ID }}
+          DATABRICKS_CLIENT_SECRET: ${{ secrets.DATABRICKS_CLIENT_SECRET }}
+          SQL_WAREHOUSE_ID: ${{ secrets.SQL_WAREHOUSE_ID }}
+          SQL_WAREHOUSE_HTTP_PATH: ${{ secrets.SQL_WAREHOUSE_HTTP_PATH }}
+          UNITY_CATALOG: ${{ vars.UNITY_CATALOG }}
+          UNITY_SCHEMA: core
+          LLM_ENDPOINT: databricks-meta-llama-3-3-70b-instruct
+          TEST_CITIZEN_TELEGRAM_ID: ${{ secrets.TEST_CITIZEN_TELEGRAM_ID }}
+          TEST_CLINICIAN_TELEGRAM_ID: ${{ secrets.TEST_CLINICIAN_TELEGRAM_ID }}
+          TEST_UNREGISTERED_TELEGRAM_ID: "000000000"
+          SKIP_AUTH: "true"
+
+      # LLM tests run separately — they cost tokens and are slower.
+      # They are allowed to fail (continue-on-error: true) without blocking
+      # the pipeline, since LLM responses can be non-deterministic.
+      - name: Run LLM integration tests (allowed to fail)
+        run: pytest tests/integration/ -v --tb=short -m "llm"
+        continue-on-error: true
+        env:
+          DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
+          DATABRICKS_CLIENT_ID: ${{ secrets.DATABRICKS_CLIENT_ID }}
+          DATABRICKS_CLIENT_SECRET: ${{ secrets.DATABRICKS_CLIENT_SECRET }}
+          SQL_WAREHOUSE_ID: ${{ secrets.SQL_WAREHOUSE_ID }}
+          SQL_WAREHOUSE_HTTP_PATH: ${{ secrets.SQL_WAREHOUSE_HTTP_PATH }}
+          UNITY_CATALOG: ${{ vars.UNITY_CATALOG }}
+          UNITY_SCHEMA: core
+          LLM_ENDPOINT: databricks-meta-llama-3-3-70b-instruct
+          TEST_CITIZEN_TELEGRAM_ID: ${{ secrets.TEST_CITIZEN_TELEGRAM_ID }}
+          TEST_CLINICIAN_TELEGRAM_ID: ${{ secrets.TEST_CLINICIAN_TELEGRAM_ID }}
+          TEST_UNREGISTERED_TELEGRAM_ID: "000000000"
+          SKIP_AUTH: "true"
