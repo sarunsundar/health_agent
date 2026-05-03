@@ -37,7 +37,7 @@ jobs:
       - name: Install dependencies
         run: |
           pip install --upgrade pip
-          pip install -r requirements.txt
+          pip install -r app_src/requirements.txt
           pip install pytest ruff
 
       # Step 4: Unit tests — tests YOUR logic, no Databricks needed

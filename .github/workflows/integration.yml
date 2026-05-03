@@ -51,7 +51,7 @@ jobs:
       - name: Install dependencies
         run: |
           pip install --upgrade pip
-          pip install -r requirements.txt
+          pip install -r app_src/requirements.txt
           pip install pytest python-dotenv
 
       # Run only non-LLM integration tests (warehouse + identity + schema)
