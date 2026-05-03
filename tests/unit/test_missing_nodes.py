@@ -16,7 +16,7 @@ Run: pytest tests/unit/ -v
 
 import pytest
 from unittest.mock import patch, MagicMock, call
-from sql_agent_langgraph import (
+from app_src.sql_agent_langgraph import (
     AgentState,
     validate_sql,
     execute_sql,

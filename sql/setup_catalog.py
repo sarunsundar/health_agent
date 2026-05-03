@@ -1,3 +1,6 @@
+# Databricks notebook source
+# This file runs as a spark_python_task via DABs (databricks bundle run catalog_setup)
+# spark and dbutils are available automatically on the Databricks cluster.
 # =============================================================================
 # Unity Catalog Setup — Parameterized Python Notebook
 #
@@ -32,16 +35,15 @@
 #   2. Create Service Principals: sp-health-dev, sp-health-prod
 # =============================================================================
 
-# Read parameters (DAB job passes these as notebook task parameters)
+
 dbutils.widgets.text("catalog_name", "health_dev", "Target Catalog")
 dbutils.widgets.dropdown("include_test_data", "true", ["true", "false"], "Include Test Data")
 dbutils.widgets.text("agents_group", "agents_dev", "Agents Group")
-
 catalog = dbutils.widgets.get("catalog_name")
-include_test_data = dbutils.widgets.get("include_test_data") == "true"
 agents_group = dbutils.widgets.get("agents_group")
+include_test_data = dbutils.widgets.get("include_test_data") == "true"
 
-spark.sql(f"DROP CATALOG {catalog} CASCADE");
+spark.sql(f"DROP CATALOG IF EXISTS {catalog} CASCADE");
 
 print(f"▶ Setting up catalog: {catalog}")
 print(f"▶ Include test data:  {include_test_data}")

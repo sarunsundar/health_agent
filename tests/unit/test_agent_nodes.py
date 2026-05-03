@@ -11,7 +11,7 @@ Run: pytest tests/unit/ -v
 
 import pytest
 from unittest.mock import patch, MagicMock
-from sql_agent_langgraph import (
+from app_src.sql_agent_langgraph import (
     AgentState,
     validate_sql,
     inject_where,
@@ -356,7 +356,7 @@ class TestResolveIdentity:
     @patch("sql_agent_langgraph._execute_statement")
     def test_successful_citizen_resolution(self, mock_exec):
         """Should resolve telegram_id → email → citizen_id."""
-        from sql_agent_langgraph import resolve_identity
+        from app_src.sql_agent_langgraph import resolve_identity
 
         # Mock: first call returns identity_mapping row, second returns email_to_id row
         mock_exec.side_effect = [
@@ -374,7 +374,7 @@ class TestResolveIdentity:
     @patch("sql_agent_langgraph._execute_statement")
     def test_successful_clinician_resolution(self, mock_exec):
         """Should resolve telegram_id → email → clinician_id."""
-        from sql_agent_langgraph import resolve_identity
+        from app_src.sql_agent_langgraph import resolve_identity
 
         mock_exec.side_effect = [
             (["databricks_email", "role"], [["doc@example.com", "clinician"]]),
@@ -390,7 +390,7 @@ class TestResolveIdentity:
     @patch("sql_agent_langgraph._execute_statement")
     def test_unregistered_telegram_id(self, mock_exec):
         """Should return error for unregistered Telegram ID."""
-        from sql_agent_langgraph import resolve_identity
+        from app_src.sql_agent_langgraph import resolve_identity
 
         mock_exec.return_value = (["databricks_email", "role"], [])  # No rows
 
@@ -403,7 +403,7 @@ class TestResolveIdentity:
     @patch("sql_agent_langgraph._execute_statement")
     def test_no_internal_id_found(self, mock_exec):
         """Should return error when email exists but no ID mapping."""
-        from sql_agent_langgraph import resolve_identity
+        from app_src.sql_agent_langgraph import resolve_identity
 
         mock_exec.side_effect = [
             (["databricks_email", "role"], [["user@example.com", "citizen"]]),
@@ -428,7 +428,7 @@ class TestGenerateSql:
     @patch("sql_agent_langgraph.ChatOpenAI")
     def test_generates_sql_for_citizen(self, MockLLM, mock_token):
         """Should produce a SELECT query from natural language (citizen)."""
-        from sql_agent_langgraph import generate_sql
+        from app_src.sql_agent_langgraph import generate_sql
 
         mock_response = MagicMock()
         mock_response.content = "SELECT citizen_id, name FROM health.core.citizen"
@@ -448,7 +448,7 @@ class TestGenerateSql:
     @patch("sql_agent_langgraph.ChatOpenAI")
     def test_strips_markdown_fences(self, MockLLM, mock_token):
         """Should strip ```sql markdown fences from LLM output."""
-        from sql_agent_langgraph import generate_sql
+        from app_src.sql_agent_langgraph import generate_sql
 
         mock_response = MagicMock()
         mock_response.content = "```sql\nSELECT * FROM health.core.citizen;\n```"
@@ -464,7 +464,7 @@ class TestGenerateSql:
     @patch("sql_agent_langgraph.ChatOpenAI")
     def test_includes_previous_errors_in_reflection(self, MockLLM, mock_token):
         """On retry, previous errors should be included in the LLM prompt."""
-        from sql_agent_langgraph import generate_sql
+        from app_src.sql_agent_langgraph import generate_sql
 
         mock_response = MagicMock()
         mock_response.content = "SELECT citizen_id, name FROM health.core.citizen"
@@ -489,7 +489,7 @@ class TestGenerateSql:
     @patch("sql_agent_langgraph.ChatOpenAI")
     def test_llm_error_returns_error(self, MockLLM, mock_token):
         """Should handle LLM API errors gracefully."""
-        from sql_agent_langgraph import generate_sql
+        from app_src.sql_agent_langgraph import generate_sql
 
         MockLLM.return_value.invoke.side_effect = Exception("LLM timeout")
 
@@ -509,7 +509,7 @@ class TestFormatResponse:
 
     def test_empty_results_returns_no_records(self):
         """Should return 'No records found' for empty results."""
-        from sql_agent_langgraph import format_response
+        from app_src.sql_agent_langgraph import format_response
 
         state = make_state(
             query_results={"columns": ["name"], "rows": [], "row_count": 0}
@@ -521,7 +521,7 @@ class TestFormatResponse:
     @patch("sql_agent_langgraph.ChatOpenAI")
     def test_formats_results_with_llm(self, MockLLM, mock_token):
         """Should use LLM to format results into natural language."""
-        from sql_agent_langgraph import format_response
+        from app_src.sql_agent_langgraph import format_response
 
         mock_response = MagicMock()
         mock_response.content = "You have 2 health records on file."
