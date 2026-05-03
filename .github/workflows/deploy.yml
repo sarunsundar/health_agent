@@ -1,0 +1,55 @@
+# ═══════════════════════════════════════════════════════════════════════════════
+# Deploy Pipeline — Runs after merge to main
+#
+# Triggers: When code is merged/pushed to the 'main' branch
+# Flow: Deploy to dev → Deploy to prod (with manual approval gate)
+#
+# Prerequisites:
+#   1. Create GitHub Environments: "dev" and "prod"
+#      (Settings → Environments → New environment)
+#   2. Add secrets to each environment:
+#      - DATABRICKS_HOST
+#      - DATABRICKS_CLIENT_ID
+#      - DATABRICKS_CLIENT_SECRET
+#   3. Add "Required reviewers" to the "prod" environment
+#      (this creates the manual approval gate)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+name: Deploy — Databricks
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - "openclaw/**"
+      - "sql/**"
+      - "*.md"
+
+jobs:
+  # ────── Stage 1: Deploy to Dev ──────
+  deploy-to-dev:
+    name: Deploy to Dev
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Databricks CLI
+        uses: databricks/setup-cli@main
+
+      # Deploy DABs bundle (creates/updates App definition)
+      - name: Deploy bundle to dev
+        run: databricks bundle deploy --target dev
+        env:
+          DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
+          DATABRICKS_CLIENT_ID: ${{ secrets.DATABRICKS_CLIENT_ID }}
+          DATABRICKS_CLIENT_SECRET: ${{ secrets.DATABRICKS_CLIENT_SECRET }}
+
+      # Deploy app code (push code and restart the app)
+      - name: Deploy app code to dev
+        run: databricks apps deploy --target dev
+        env:
+          DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
+          DATABRICKS_CLIENT_ID: ${{ secrets.DATABRICKS_CLIENT_ID }}
+          DATABRICKS_CLIENT_SECRET: ${{ secrets.DATABRICKS_CLIENT_SECRET }}

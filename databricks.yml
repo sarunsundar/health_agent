@@ -99,6 +99,18 @@ targets:
                 name: "databricks-gemma-3-12b"
                 permission: "CAN_QUERY"
 
+            - name: "sp_client_id"
+              secret:
+                scope: "dev-secrets"
+                key: "sp-client-id"
+                permission: "READ"
+
+            - name: "sp_client_secret"
+              secret:
+                scope: "dev-secrets"
+                key: "sp-client-secret"
+                permission: "READ"
+
           #── Who can access this App ──
           permissions:
             - level: CAN_USE
