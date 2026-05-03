@@ -34,6 +34,11 @@ jobs:
     name: Integration Tests (Real Databricks)
     runs-on: ubuntu-latest
 
+    # Skip this job if the commit message contains [skip integration]
+    # Example: git commit -m "chore: update readme [skip integration]"
+    # This avoids unnecessary DBU costs for non-agent changes.
+    if: "!contains(github.event.head_commit.message, '[skip integration]')"
+
     # Prevent parallel integration runs if two PRs merge in quick succession
     concurrency:
       group: integration-tests
