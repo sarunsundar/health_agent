@@ -47,7 +47,7 @@ def make_state(**overrides) -> AgentState:
 class TestGetSchema:
     """Tests for the schema auto-detection node (Node 2)."""
 
-    @patch("sql_agent_langgraph._get_sql_database")
+    @patch("app_src.sql_agent_langgraph._get_sql_database")
     def test_returns_schema_from_sql_database(self, mock_get_db):
         """Should return table_schema from SQLDatabase.get_table_info()."""
         mock_db = MagicMock()
@@ -63,7 +63,7 @@ class TestGetSchema:
         assert "citizen" in result["table_schema"]
         mock_db.get_table_info.assert_called_once()
 
-    @patch("sql_agent_langgraph._get_sql_database")
+    @patch("app_src.sql_agent_langgraph._get_sql_database")
     def test_falls_back_to_hardcoded_schema_on_error(self, mock_get_db):
         """Should return a hardcoded fallback schema if SQLDatabase fails."""
         mock_get_db.side_effect = Exception("Can't load plugin: sqlalchemy.dialects:databricks")
@@ -76,7 +76,7 @@ class TestGetSchema:
         assert "citizen" in result["table_schema"].lower()
         assert "clinician" in result["table_schema"].lower()
 
-    @patch("sql_agent_langgraph._get_sql_database")
+    @patch("app_src.sql_agent_langgraph._get_sql_database")
     def test_fallback_schema_contains_create_table(self, mock_get_db):
         """Fallback schema should be valid DDL, not an empty string."""
         mock_get_db.side_effect = Exception("connection refused")
@@ -86,7 +86,7 @@ class TestGetSchema:
 
         assert "CREATE TABLE" in result["table_schema"]
 
-    @patch("sql_agent_langgraph._get_sql_database")
+    @patch("app_src.sql_agent_langgraph._get_sql_database")
     def test_schema_is_non_empty_string(self, mock_get_db):
         """table_schema must never be None or empty."""
         mock_db = MagicMock()
@@ -106,8 +106,8 @@ class TestGetSchema:
 class TestExecuteSql:
     """Tests for the SQL execution node (Node 6) — Databricks SDK mocked."""
 
-    @patch("sql_agent_langgraph._log_audit_event")
-    @patch("sql_agent_langgraph._execute_statement")
+    @patch("app_src.sql_agent_langgraph._log_audit_event")
+    @patch("app_src.sql_agent_langgraph._execute_statement")
     def test_successful_execution_returns_results(self, mock_exec, mock_audit):
         """Should return structured query_results on success."""
         mock_exec.return_value = (
@@ -128,8 +128,8 @@ class TestExecuteSql:
         assert result["query_results"]["row_count"] == 1
         assert result["execution_error"] is None
 
-    @patch("sql_agent_langgraph._log_audit_event")
-    @patch("sql_agent_langgraph._execute_statement")
+    @patch("app_src.sql_agent_langgraph._log_audit_event")
+    @patch("app_src.sql_agent_langgraph._execute_statement")
     def test_execution_failure_returns_error(self, mock_exec, mock_audit):
         """Should return execution_error and None results on failure."""
         mock_exec.side_effect = RuntimeError("Table not found: health.core.citizen")
@@ -144,8 +144,8 @@ class TestExecuteSql:
         assert result["query_results"] is None
         assert "Table not found" in result["execution_error"]
 
-    @patch("sql_agent_langgraph._log_audit_event")
-    @patch("sql_agent_langgraph._execute_statement")
+    @patch("app_src.sql_agent_langgraph._log_audit_event")
+    @patch("app_src.sql_agent_langgraph._execute_statement")
     def test_audit_logged_on_success(self, mock_exec, mock_audit):
         """Audit event must be logged for every successful execution."""
         mock_exec.return_value = (["citizen_id"], [["C-001"]])
@@ -164,8 +164,8 @@ class TestExecuteSql:
         assert kwargs["status"] == "success"
         assert kwargs["telegram_user_id"] == "99999"
 
-    @patch("sql_agent_langgraph._log_audit_event")
-    @patch("sql_agent_langgraph._execute_statement")
+    @patch("app_src.sql_agent_langgraph._log_audit_event")
+    @patch("app_src.sql_agent_langgraph._execute_statement")
     def test_audit_logged_on_failure(self, mock_exec, mock_audit):
         """Audit event must be logged even when execution fails."""
         mock_exec.side_effect = RuntimeError("Warehouse unavailable")
@@ -182,8 +182,8 @@ class TestExecuteSql:
         kwargs = mock_audit.call_args[1]
         assert kwargs["status"] == "error"
 
-    @patch("sql_agent_langgraph._log_audit_event")
-    @patch("sql_agent_langgraph._execute_statement")
+    @patch("app_src.sql_agent_langgraph._log_audit_event")
+    @patch("app_src.sql_agent_langgraph._execute_statement")
     def test_empty_result_set_is_valid(self, mock_exec, mock_audit):
         """A query returning 0 rows must not be treated as a failure."""
         mock_exec.return_value = (["citizen_id", "name"], [])
@@ -199,8 +199,8 @@ class TestExecuteSql:
         assert result["query_results"]["row_count"] == 0
         assert result["execution_error"] is None
 
-    @patch("sql_agent_langgraph._log_audit_event")
-    @patch("sql_agent_langgraph._execute_statement")
+    @patch("app_src.sql_agent_langgraph._log_audit_event")
+    @patch("app_src.sql_agent_langgraph._execute_statement")
     def test_clinician_query_uses_correct_access_path(self, mock_exec, mock_audit):
         """Audit log access_path must reflect the role (telegram_clinician)."""
         mock_exec.return_value = (["clinician_id"], [["D-001"]])

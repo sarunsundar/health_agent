@@ -319,20 +319,20 @@ class TestRetryOrFail:
 class TestReturnError:
     """Tests for the error response node (Node 9)."""
 
-    @patch("sql_agent_langgraph._log_audit_event")
+    @patch("app_src.sql_agent_langgraph._log_audit_event")
     def test_returns_error_message(self, mock_audit):
         state = make_state(error="Database unavailable")
         result = return_error(state)
         assert "Database unavailable" in result["response"]
         assert "Sorry" in result["response"]
 
-    @patch("sql_agent_langgraph._log_audit_event")
+    @patch("app_src.sql_agent_langgraph._log_audit_event")
     def test_returns_validation_error(self, mock_audit):
         state = make_state(validation_error="Forbidden: DROP")
         result = return_error(state)
         assert "Forbidden: DROP" in result["response"]
 
-    @patch("sql_agent_langgraph._log_audit_event")
+    @patch("app_src.sql_agent_langgraph._log_audit_event")
     def test_logs_audit_for_telegram_requests(self, mock_audit):
         state = make_state(
             telegram_id="12345",
@@ -353,7 +353,7 @@ class TestReturnError:
 class TestResolveIdentity:
     """Tests for identity resolution node (Node 1) — Databricks calls mocked."""
 
-    @patch("sql_agent_langgraph._execute_statement")
+    @patch("app_src.sql_agent_langgraph._execute_statement")
     def test_successful_citizen_resolution(self, mock_exec):
         """Should resolve telegram_id → email → citizen_id."""
         from app_src.sql_agent_langgraph import resolve_identity
@@ -371,7 +371,7 @@ class TestResolveIdentity:
         assert result["internal_id"] == "C-12345"
         assert result["role"] == "citizen"
 
-    @patch("sql_agent_langgraph._execute_statement")
+    @patch("app_src.sql_agent_langgraph._execute_statement")
     def test_successful_clinician_resolution(self, mock_exec):
         """Should resolve telegram_id → email → clinician_id."""
         from app_src.sql_agent_langgraph import resolve_identity
@@ -387,7 +387,7 @@ class TestResolveIdentity:
         assert result["internal_id"] == "D-67890"
         assert result["role"] == "clinician"
 
-    @patch("sql_agent_langgraph._execute_statement")
+    @patch("app_src.sql_agent_langgraph._execute_statement")
     def test_unregistered_telegram_id(self, mock_exec):
         """Should return error for unregistered Telegram ID."""
         from app_src.sql_agent_langgraph import resolve_identity
@@ -400,7 +400,7 @@ class TestResolveIdentity:
         assert "error" in result
         assert "not registered" in result["error"]
 
-    @patch("sql_agent_langgraph._execute_statement")
+    @patch("app_src.sql_agent_langgraph._execute_statement")
     def test_no_internal_id_found(self, mock_exec):
         """Should return error when email exists but no ID mapping."""
         from app_src.sql_agent_langgraph import resolve_identity
@@ -424,8 +424,8 @@ class TestResolveIdentity:
 class TestGenerateSql:
     """Tests for SQL generation node (Node 3) — LLM calls mocked."""
 
-    @patch("sql_agent_langgraph._get_sp_token", return_value="fake-token")
-    @patch("sql_agent_langgraph.ChatOpenAI")
+    @patch("app_src.sql_agent_langgraph._get_sp_token", return_value="fake-token")
+    @patch("app_src.sql_agent_langgraph.ChatOpenAI")
     def test_generates_sql_for_citizen(self, MockLLM, mock_token):
         """Should produce a SELECT query from natural language (citizen)."""
         from app_src.sql_agent_langgraph import generate_sql
@@ -444,8 +444,8 @@ class TestGenerateSql:
         assert result["generated_sql"] == "SELECT citizen_id, name FROM health.core.citizen"
         assert result["sql_is_safe"] is None  # Not validated yet
 
-    @patch("sql_agent_langgraph._get_sp_token", return_value="fake-token")
-    @patch("sql_agent_langgraph.ChatOpenAI")
+    @patch("app_src.sql_agent_langgraph._get_sp_token", return_value="fake-token")
+    @patch("app_src.sql_agent_langgraph.ChatOpenAI")
     def test_strips_markdown_fences(self, MockLLM, mock_token):
         """Should strip ```sql markdown fences from LLM output."""
         from app_src.sql_agent_langgraph import generate_sql
@@ -460,8 +460,8 @@ class TestGenerateSql:
         assert not result["generated_sql"].startswith("```")
         assert not result["generated_sql"].endswith(";")
 
-    @patch("sql_agent_langgraph._get_sp_token", return_value="fake-token")
-    @patch("sql_agent_langgraph.ChatOpenAI")
+    @patch("app_src.sql_agent_langgraph._get_sp_token", return_value="fake-token")
+    @patch("app_src.sql_agent_langgraph.ChatOpenAI")
     def test_includes_previous_errors_in_reflection(self, MockLLM, mock_token):
         """On retry, previous errors should be included in the LLM prompt."""
         from app_src.sql_agent_langgraph import generate_sql
@@ -485,8 +485,8 @@ class TestGenerateSql:
         assert "PREVIOUS ATTEMPTS FAILED" in system_msg
         assert "Table not found" in system_msg
 
-    @patch("sql_agent_langgraph._get_sp_token", return_value="fake-token")
-    @patch("sql_agent_langgraph.ChatOpenAI")
+    @patch("app_src.sql_agent_langgraph._get_sp_token", return_value="fake-token")
+    @patch("app_src.sql_agent_langgraph.ChatOpenAI")
     def test_llm_error_returns_error(self, MockLLM, mock_token):
         """Should handle LLM API errors gracefully."""
         from app_src.sql_agent_langgraph import generate_sql
@@ -517,8 +517,8 @@ class TestFormatResponse:
         result = format_response(state)
         assert "No records found" in result["response"]
 
-    @patch("sql_agent_langgraph._get_sp_token", return_value="fake-token")
-    @patch("sql_agent_langgraph.ChatOpenAI")
+    @patch("app_src.sql_agent_langgraph._get_sp_token", return_value="fake-token")
+    @patch("app_src.sql_agent_langgraph.ChatOpenAI")
     def test_formats_results_with_llm(self, MockLLM, mock_token):
         """Should use LLM to format results into natural language."""
         from app_src.sql_agent_langgraph import format_response
