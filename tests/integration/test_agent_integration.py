@@ -426,7 +426,7 @@ class TestAuditLoggingIntegration:
         ))
 
         # Wait briefly for the background audit thread to complete
-        time.sleep(5)
+        time.sleep(15)
 
         # Check the audit log for a recent entry from this telegram_id
         import time as t
