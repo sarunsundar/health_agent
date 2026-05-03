@@ -15,9 +15,9 @@ env:
   - name: DATABRICKS_HOST
     value: "https://dbc-62ddb402-91eb.cloud.databricks.com"
   - name: DATABRICKS_CLIENT_ID
-    value: "a2c9245b-2bcb-4355-91d4-cb8ce55f7549"
+    value: "775801a3-5cc8-4982-97c7-dbd3ce4f434b"
   - name: DATABRICKS_CLIENT_SECRET
-    value: "dose6a986572541f970bd58a626702cc4902"
+    value: "dose7e11f0675c8e48ceaeaa79b806562c4e"
   - name: SQL_WAREHOUSE_ID
     value: "a60db24c17d6587f"
   - name: SQL_WAREHOUSE_HTTP_PATH

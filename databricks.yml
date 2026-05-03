@@ -1,0 +1,138 @@
+# ═══════════════════════════════════════════════════════════════════════════════
+# Databricks Asset Bundles — Health SQL Agent
+#
+# This file is used by `databricks bundle deploy` for CI/CD.
+# It is NOT deployed to the Databricks App itself.
+#
+# Reference: https://docs.databricks.com/en/dev-tools/bundles/apps-tutorial.html
+#
+# Usage:
+#   databricks bundle validate --target dev     # Validate config
+#   databricks bundle deploy --target dev       # Deploy to dev
+#   databricks bundle deploy --target prod      # Deploy to prod
+#   databricks bundle run health_agent_app      # Start the app
+# ═══════════════════════════════════════════════════════════════════════════════
+
+bundle:
+  name: health-sql-agent
+  engine: direct # Use Direct Deployment Engine — avoids Terraform GPG key expiry issue
+
+# ── Sync (Controls what gets uploaded to Databricks workspace) ──
+sync:
+  include:
+    - ./*
+  exclude:
+    - tests/
+    - .venv/
+    - .pytest_cache/
+    - __pycache__/
+    - "*.pyc"
+    - .env
+    - .github/
+    - .vscode/
+    - .git/
+    - .langgraph_api/
+    - .databricks/
+    - "*.md"
+    - langgraph.json
+    - .gitignore
+
+# ── Variables (non-secret config, different per target) ──
+variables:
+  catalog_name:
+    description: "Unity Catalog catalog for this environment"
+  app_name:
+    description: "Databricks App name for this environment"
+  include_test_data:
+    description: "Whether to insert sample test data (true for dev/test, false for prod)"
+    default: "false"
+
+# ── Top-level resources (shared across targets, variables substituted per target) ──
+resources:
+  jobs:
+    catalog_setup:
+      # Run this once per environment to create tables, row filters, grants, and seed data.
+      # Usage:
+      #   databricks bundle run catalog_setup --target dev
+      #   databricks bundle run catalog_setup --target prod
+      #
+      # WHY A JOB (not pure SQL): EXECUTE IMMEDIATE with || concatenation strips
+      # '' escape sequences inside dynamic strings, breaking is_account_group_member('citizens').
+      # Python f-strings + spark.sql() are the correct approach — Python substitutes the
+      # catalog name BEFORE Databricks parses the SQL.
+      name: "health-catalog-setup-${bundle.target}"
+      tasks:
+        - task_key: setup_catalog
+          notebook_task:
+            notebook_path: ./sql/setup_catalog.py
+            base_parameters:
+              catalog_name: ${var.catalog_name}
+              include_test_data: ${var.include_test_data}
+
+targets:
+  dev:
+    default: true
+    mode: development
+    workspace:
+      host: https://dbc-62ddb402-91eb.cloud.databricks.com
+    variables:
+      catalog_name: health_dev
+      app_name: health-sql-agent-dev
+      include_test_data: "true"
+
+    resources:
+      apps:
+        health_agent_app:
+          name: ${var.app_name}
+          description: "Health SQL Agent — DEV"
+          source_code_path: ./app_src
+
+          # ── App Resource Permissions ── Grants auto-created App SP access to these resources
+          resources:
+            - name: "sql_warehouse"
+              sql_warehouse:
+                id: "a60db24c17d6587f"
+                permission: "CAN_USE"
+
+            - name: "llm_endpoint"
+              serving_endpoint:
+                name: "databricks-gemma-3-12b"
+                permission: "CAN_QUERY"
+
+          #── Who can access this App ──
+          permissions:
+            - level: CAN_USE
+              group_name: users
+
+  # ────── PROD ──────
+  prod:
+    mode: production
+    workspace:
+      host: https://dbc-62ddb402-91eb.cloud.databricks.com
+      root_path: /Workspace/Users/${workspace.current_user.userName}/.bundle/${bundle.name}/${bundle.target}
+    variables:
+      catalog_name: health_prod
+      app_name: health-sql-agent-prod
+      include_test_data: "false" # No sample data in prod
+
+    resources:
+      apps:
+        health_agent_app:
+          name: ${var.app_name}
+          description: "Health SQL Agent — PROD"
+          source_code_path: ./app_src
+
+          # ── App Resource Permissions ──
+          resources:
+            - name: "sql_warehouse"
+              sql_warehouse:
+                id: "<your-prod-warehouse-id>" # Replace with your PROD warehouse ID
+                permission: "CAN_USE"
+            - name: "llm_endpoint"
+              serving_endpoint:
+                name: "databricks-meta-llama-3-3-70b-instruct"
+                permission: "CAN_QUERY"
+
+          permissions:
+            - level: CAN_MANAGE
+              user_name: "<your-admin-email>" # Replace with admin email

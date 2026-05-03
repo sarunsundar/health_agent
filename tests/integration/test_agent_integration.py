@@ -51,7 +51,7 @@ if missing:
     )
 
 # Only import after env vars are confirmed present
-from sql_agent_langgraph import (
+from app_src.sql_agent_langgraph import (
     AgentState,
     resolve_identity,
     get_schema,

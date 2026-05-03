@@ -6,30 +6,21 @@
       "type": "debugpy",
       "request": "launch",
       "module": "uvicorn",
-      "args": [
-        "app:app",
-        "--host", "0.0.0.0",
-        "--port", "8000",
-        "--reload"
-      ],
+      "args": ["app:app", "--host", "0.0.0.0", "--port", "8000", "--reload"],
       "envFile": "${workspaceFolder}/.env",
       "env": {
         "SKIP_AUTH": "true"
       },
       "jinja": true,
       "justMyCode": false,
-      "cwd": "${workspaceFolder}"
+      "cwd": "${workspaceFolder}/app_src"
     },
     {
       "name": "Debug Unit Tests",
       "type": "debugpy",
       "request": "launch",
       "module": "pytest",
-      "args": [
-        "tests/unit/",
-        "-v",
-        "--tb=short"
-      ],
+      "args": ["tests/unit/", "-v", "--tb=short"],
       "cwd": "${workspaceFolder}",
       "justMyCode": false
     },
@@ -38,11 +29,7 @@
       "type": "debugpy",
       "request": "launch",
       "module": "pytest",
-      "args": [
-        "tests/integration/",
-        "-v",
-        "--tb=short"
-      ],
+      "args": ["tests/integration/", "-v", "--tb=short"],
       "envFile": "${workspaceFolder}/.env",
       "cwd": "${workspaceFolder}",
       "justMyCode": false
