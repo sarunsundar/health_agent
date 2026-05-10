@@ -111,6 +111,12 @@ targets:
                 key: "sp-client-secret"
                 permission: "READ"
 
+            - name: "langsmith_api_key"
+              secret:
+                scope: "dev-secrets"
+                key: "langsmith-api-key"
+                permission: "READ"
+
           #── Who can access this App ──
           permissions:
             - level: CAN_USE

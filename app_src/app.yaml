@@ -28,6 +28,12 @@ env:
     value: "health_dev"
   - name: SKIP_AUTH
     value: "false"
+  - name: LANGSMITH_TRACING
+    value: "true"
+  - name: LANGSMITH_API_KEY
+    valueFrom: langsmith_api_key
+  - name: LANGSMITH_PROJECT
+    value: "health-sql-agent-dev"
 
 # User Authorization (for interactive Databricks UI users)
 # For Telegram/OpenClaw flow, this is NOT used — SP handles auth
